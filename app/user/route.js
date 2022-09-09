@@ -4,6 +4,7 @@ const {
   handlerPostUser,
   handlerPutUser,
   handlerDeleteUser,
+  handlerLoginUser,
 } = require("./handler");
 const router = express.Router();
 
@@ -23,8 +24,13 @@ router.post("/", handlerPostUser);
 router.put("/:id", handlerPutUser);
 
 // api 4
-// delete user
+// delete users
 // menghapus user yang sudah terdaftar
 router.delete("/:id", handlerDeleteUser);
+
+// api 5
+// login user
+// login user yang sudah terdaftar
+router.post("/login", handlerLoginUser);
 
 module.exports = router;
