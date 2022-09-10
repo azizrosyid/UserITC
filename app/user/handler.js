@@ -4,14 +4,22 @@ const {
   validateUserCreatePayload,
   validateUserUpdatePayload,
 } = require("../../validator/user");
+const { generateAccessToken } = require("../../utils/TokenManager");
 
 module.exports = {
-  handlerGetUser: async (req, res) => {
-    const users = await User.findAll();
-    console.log(req.body);
-    res.status(200).json(users);
+  handlerGetUser: async (req, res, next) => {
+    try {
+      const users = await User.findAll();
+      res.status(200).json({
+        status: "success",
+        message: "Get all users",
+        data: users,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
-  handlerPostUser: async (req, res) => {
+  handlerPostUser: async (req, res, next) => {
     try {
       const { email, password, name, organisation } = req.body;
 
@@ -24,12 +32,16 @@ module.exports = {
         role: "user",
         organisation,
       });
-      res.status(200).json(user);
+      res.status(200).json({
+        status: "success",
+        message: "User created",
+        data: user,
+      });
     } catch (error) {
-      res.status(400).json(error.message);
+      next(error);
     }
   },
-  handlerPutUser: async (req, res) => {
+  handlerPutUser: async (req, res, next) => {
     try {
       const { id } = req.params;
       const { name, organisation } = req.body;
@@ -37,36 +49,33 @@ module.exports = {
 
       const user = await User.findByPk(id);
       if (!user) {
-        res.status(404).json({
-          message: "User not found",
-        });
-      } else {
-        await user.update({
-          name,
-          organisation,
-        });
-        res.status(200).json(user);
+        throw new Error("User not found");
       }
+      await user.update({
+        name,
+        organisation,
+      });
+      res.status(200).json(user);
     } catch (error) {
-      res.status(400).json(error.message);
+      next(error);
     }
   },
-  handlerDeleteUser: async (req, res) => {
-    console.log(req.body);
-    const { id } = req.params;
-    const user = await User.findByPk(id);
-    if (!user) {
-      res.status(404).json({
-        message: "User not found",
-      });
-    } else {
+  handlerDeleteUser: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const user = await User.findByPk(id);
+      if (!user) {
+        throw new Error("User not found");
+      }
       await user.destroy();
       res.status(200).json({
         message: "User deleted",
       });
+    } catch (error) {
+      next(error);
     }
   },
-  handlerLoginUser: async (req, res) => {
+  handlerLoginUser: async (req, res, next) => {
     try {
       const { email, password } = req.body;
 
@@ -76,18 +85,32 @@ module.exports = {
         },
       });
 
-      if (!user){
+      if (!user) {
         throw new Error("User not found");
       }
 
       const passwordValid = bcrypt.compareSync(password, user.password);
-      if (!passwordValid){
+      if (!passwordValid) {
         throw new Error("Invalid password");
       }
 
-      res.status(200).json(user);
+      const accessToken = generateAccessToken({
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      });
+
+      res.status(200).json({
+        status: "success",
+        message: "Login success",
+        data: {
+          user,
+          accessToken,
+        },
+      });
     } catch (error) {
-      res.status(400).json(error.message);
+      next(error);
     }
   },
 };

@@ -1,4 +1,5 @@
 const express = require("express");
+const AuthenticationToken = require("../../middleware/AuthenticationToken");
 const {
   handlerGetUser,
   handlerPostUser,
@@ -16,17 +17,17 @@ router.get("/", handlerGetUser);
 // api 2
 // create user
 // menambahkan user baru
-router.post("/", handlerPostUser);
+router.post("/", AuthenticationToken, handlerPostUser);
 
 // api 3
 // update user
 // mengupdate user yang sudah terdaftar
-router.put("/:id", handlerPutUser);
+router.put("/:id", AuthenticationToken, handlerPutUser);
 
 // api 4
 // delete users
 // menghapus user yang sudah terdaftar
-router.delete("/:id", handlerDeleteUser);
+router.delete("/:id", AuthenticationToken, handlerDeleteUser);
 
 // api 5
 // login user
