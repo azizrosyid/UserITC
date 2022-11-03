@@ -1,4 +1,4 @@
-const { userCreateSchema, userUpdateSchema } = require("./schema");
+const { userCreateSchema, userUpdateSchema, filePhotoSchema } = require("./schema");
 
 function validateUserCreatePayload(payload) {
   const validationResult = userCreateSchema.validate(payload);
@@ -14,7 +14,15 @@ function validateUserUpdatePayload(payload) {
   }
 }
 
+function validateUserPhotoPayload(payload) {
+  const validationResult = filePhotoSchema.validate(payload);
+  if (validationResult.error) {
+    throw new Error(validationResult.error.message);
+  }
+}
+
 module.exports = {
-    validateUserCreatePayload,
-    validateUserUpdatePayload,
+  validateUserCreatePayload,
+  validateUserUpdatePayload,
+  validateUserPhotoPayload,
 };

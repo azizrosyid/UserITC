@@ -13,7 +13,13 @@ const userUpdateSchema = Joi.object({
   organisation: Joi.string().required(),
 }).unknown();
 
+const filePhotoSchema = Joi.object({
+  fieldname: Joi.string().required(),
+  mimetype: Joi.string().valid("image/jpeg", "image/png").required(),
+  filename: Joi.string().required(),
+}).unknown();
+
 module.exports = {
-    userCreateSchema,
-    userUpdateSchema,
-}
+  userCreateSchema,
+  userUpdateSchema,filePhotoSchema
+};

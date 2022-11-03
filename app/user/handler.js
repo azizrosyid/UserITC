@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const {
   validateUserCreatePayload,
   validateUserUpdatePayload,
+  validateUserPhotoPayload,
 } = require("../../validator/user");
 const { generateAccessToken } = require("../../utils/TokenManager");
 
@@ -19,18 +20,45 @@ module.exports = {
       next(error);
     }
   },
+  handlerGetUserById: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      const user = await User.findOne({
+        where: {
+          id: id,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      res.status(200).json({
+        status: "success",
+        message: "Get user by id",
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
   handlerPostUser: async (req, res, next) => {
     try {
       const { email, password, name, organisation } = req.body;
 
       validateUserCreatePayload(req.body);
+      validateUserPhotoPayload(req.file);
       const hashPassword = await bcrypt.hash(password, 10);
+      const filename = req.file.filename;
+      console.log(filename);
       const user = await User.create({
         email,
         password: hashPassword,
         name,
         role: "user",
         organisation,
+        photo: "/images/" + req.file.filename,
       });
       res.status(200).json({
         status: "success",
@@ -55,7 +83,10 @@ module.exports = {
         name,
         organisation,
       });
-      res.status(200).json(user);
+      res.status(200).json({
+        status: "success",
+        message: "User updated",
+      });
     } catch (error) {
       next(error);
     }
@@ -67,8 +98,14 @@ module.exports = {
       if (!user) {
         throw new Error("User not found");
       }
+
+      if (user.role === "admin") {
+        throw new Error("Cannot delete admin");
+      }
+
       await user.destroy();
       res.status(200).json({
+        status: "success",
         message: "User deleted",
       });
     } catch (error) {
@@ -108,6 +145,29 @@ module.exports = {
           user,
           accessToken,
         },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+  handlerGetUserLoggedIn: async (req, res, next) => {
+    try {
+      const id = req.user.id;
+
+      const user = await User.findOne({
+        where: {
+          id: id,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      res.status(200).json({
+        status: "success",
+        message: "Profile",
+        data: user,
       });
     } catch (error) {
       next(error);
